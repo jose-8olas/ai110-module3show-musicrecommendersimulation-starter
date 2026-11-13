@@ -1,19 +1,11 @@
 id,title,artist,genre,mood,energy,tempo_bpm,valence,danceability,acousticness
 1,Sunrise City,Neon Echo,pop,happy,0.82,118,0.84,0.79,0.18
 2,Midnight Coding,LoRoom,lofi,chill,0.42,78,0.56,0.62,0.71
-3,Storm Runner,Voltline,rock,intense,0.91,152,0.48,0.66,0.1
-4,Library Rain,Paper Lanterns,lofi,chill,0.35,72,0.6,0.58,0.86
+3,Storm Runner,Voltline,rock,intense,0.91,152,0.48,0.66,0.10
+4,Library Rain,Paper Lanterns,lofi,chill,0.35,72,0.60,0.58,0.86
 5,Gym Hero,Max Pulse,pop,intense,0.93,132,0.77,0.88,0.05
 6,Spacewalk Thoughts,Orbit Bloom,ambient,chill,0.28,60,0.65,0.41,0.92
 7,Coffee Shop Stories,Slow Stereo,jazz,relaxed,0.37,90,0.71,0.54,0.89
 8,Night Drive Loop,Neon Echo,synthwave,moody,0.75,110,0.49,0.73,0.22
-9,Focus Flow,LoRoom,lofi,focused,0.4,80,0.59,0.6,0.78
+9,Focus Flow,LoRoom,lofi,focused,0.40,80,0.59,0.60,0.78
 10,Rooftop Lights,Indigo Parade,indie pop,happy,0.76,124,0.81,0.82,0.35
-11,Golden Hour,Prairie Lines,country,nostalgic,0.55,96,0.72,0.58,0.76
-12,City Bounce,Southside Rhythm,hip-hop,confident,0.86,104,0.74,0.91,0.08
-13,Island Breeze,Coral Avenue,reggae,carefree,0.62,88,0.89,0.77,0.32
-14,Iron Pulse,Black Voltage,metal,aggressive,0.97,168,0.38,0.52,0.03
-15,Velvet Evening,Mira Sol,R&B,romantic,0.48,82,0.68,0.71,0.24
-16,Funky Weekend,The Pocket,funk,playful,0.88,116,0.86,0.94,0.12
-17,Quiet Fields,Willow & Pine,folk,peaceful,0.24,68,0.63,0.36,0.95
-18,Midnight Waltz,Silver Ensemble,classical,melancholic,0.31,74,0.29,0.22,0.98

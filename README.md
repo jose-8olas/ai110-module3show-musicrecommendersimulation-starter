@@ -155,12 +155,24 @@ You can add more tests in `tests/test_recommender.py`.
 Paste a sample of your recommender's output here as a text block so a reader can see what it produces:
 
 ```
-# e.g.:
-# User profile: genre=indie, mood=chill, energy=low
-# Recommendations:
-#   1. ...
-#   2. ...
-#   3. ...
+Loaded songs: 18
+
+Top recommendations:
+
+Sunrise City - Score: 6.91
+Because: genre match (+2.0), mood match (+1.0), energy similarity (+1.47), valence similarity (+0.96), tempo similarity (+0.49), danceability similarity (+0.49), acousticness similarity (+0.49)
+
+Gym Hero - Score: 5.60
+Because: genre match (+2.0), energy similarity (+1.30), valence similarity (+0.97), tempo similarity (+0.44), danceability similarity (+0.46), acousticness similarity (+0.42)
+
+Rooftop Lights - Score: 4.82
+Because: mood match (+1.0), energy similarity (+1.44), valence similarity (+0.99), tempo similarity (+0.48), danceability similarity (+0.49), acousticness similarity (+0.43)
+
+Funky Weekend - Score: 3.69
+Because: energy similarity (+1.38), valence similarity (+0.94), tempo similarity (+0.48), danceability similarity (+0.43), acousticness similarity (+0.46)
+
+City Bounce - Score: 3.65
+Because: energy similarity (+1.41), valence similarity (+0.94), tempo similarity (+0.42), danceability similarity (+0.45), acousticness similarity (+0.44)
 ```
 
 **Screenshot or video** _(optional)_: <!-- Insert a screenshot or demo video link here -->

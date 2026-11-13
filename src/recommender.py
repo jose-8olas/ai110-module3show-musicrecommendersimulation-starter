@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
+import csv
 
 @dataclass
 class Song:
@@ -45,29 +46,122 @@ class Recommender:
         # TODO: Implement explanation logic
         return "Explanation placeholder"
 
+
 def load_songs(csv_path: str) -> List[Dict]:
     """
     Loads songs from a CSV file.
     Required by src/main.py
     """
-    # TODO: Implement CSV loading logic
-    print(f"Loading songs from {csv_path}...")
-    return []
+    songs = []
+
+    numeric_columns = [
+        "energy",
+        "tempo_bpm",
+        "valence",
+        "danceability",
+        "acousticness"
+    ]
+
+    with open(csv_path, "r", newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            row["id"] = int(row["id"])
+
+            for column in numeric_columns:
+                row[column] = float(row[column])
+
+            songs.append(row)
+
+    print(f"Loaded songs: {len(songs)}")
+
+    return songs
+
+
 
 def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
-    """
-    Scores a single song against user preferences.
-    Required by recommend_songs() and src/main.py
-    """
-    # TODO: Implement scoring logic using your Algorithm Recipe from Phase 2.
-    # Expected return format: (score, reasons)
-    return []
+    """Calculate a weighted score and reasons for a song."""
+
+    score = 0.0
+    reasons = []
+
+    # Genre match: +2.0 points
+    if song["genre"].lower() == user_prefs["favorite_genre"].lower():
+        score += 2.0
+        reasons.append("genre match (+2.0)")
+
+    # Mood match: +1.0 point
+    if song["mood"].lower() == user_prefs["favorite_mood"].lower():
+        score += 1.0
+        reasons.append("mood match (+1.0)")
+
+    # Energy similarity: up to 1.5 points
+    energy_similarity = 1 - abs(
+        song["energy"] - user_prefs["target_energy"]
+    )
+    energy_points = 1.5 * energy_similarity
+    score += energy_points
+    reasons.append(f"energy similarity (+{energy_points:.2f})")
+
+    # Valence similarity: up to 1.0 point
+    valence_similarity = 1 - abs(
+        song["valence"] - user_prefs["target_valence"]
+    )
+    valence_points = 1.0 * valence_similarity
+    score += valence_points
+    reasons.append(f"valence similarity (+{valence_points:.2f})")
+
+    # Tempo similarity: up to 0.5 points
+    tempo_similarity = max(
+        0,
+        1 - abs(song["tempo_bpm"] - user_prefs["target_tempo"]) / 100
+    )
+    tempo_points = 0.5 * tempo_similarity
+    score += tempo_points
+    reasons.append(f"tempo similarity (+{tempo_points:.2f})")
+
+    # Danceability similarity: up to 0.5 points
+    danceability_similarity = 1 - abs(
+        song["danceability"] - user_prefs["target_danceability"]
+    )
+    danceability_points = 0.5 * danceability_similarity
+    score += danceability_points
+    reasons.append(f"danceability similarity (+{danceability_points:.2f})")
+
+    # Acousticness similarity: up to 0.5 points
+    acousticness_similarity = 1 - abs(
+        song["acousticness"] - user_prefs["target_acousticness"]
+    )
+    acousticness_points = 0.5 * acousticness_similarity
+    score += acousticness_points
+    reasons.append(f"acousticness similarity (+{acousticness_points:.2f})")
+
+    return score, reasons
+
+
 
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """
-    Functional implementation of the recommendation logic.
-    Required by src/main.py
+    Scores all songs and returns the top k recommendations.
     """
-    # TODO: Implement scoring and ranking logic
-    # Expected return format: (song_dict, score, explanation)
-    return []
+
+    scored_songs = []
+
+    # Score every song
+    for song in songs:
+        score, reasons = score_song(user_prefs, song)
+
+        # Combine the scoring reasons into one explanation
+        explanation = ", ".join(reasons)
+
+        scored_songs.append((song, score, explanation))
+
+    # Sort songs from highest score to lowest score
+    ranked_songs = sorted(
+        scored_songs,
+        key=lambda recommendation: recommendation[1],
+        reverse=True
+    )
+
+    # Return only the top k songs
+    return ranked_songs[:k]
