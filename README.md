@@ -201,6 +201,119 @@ Examples:
 
 You will go deeper on this in your model card.
 
+## System Evaluation
+
+The recommender was evaluated using four different user preference profiles to observe how the scoring algorithm behaves under different listening preferences.
+
+### 1. High-Energy Pop
+
+```Loaded songs: 18
+
+=======================================================
+USER PROFILE: High-Energy Pop
+=======================================================
+
+Top 5 recommendations:
+
+Sunrise City - Score: 6.56
+Because: genre match (+2.0), mood match (+1.0), energy similarity (+1.30), valence similarity (+0.94), tempo similarity (+0.41), danceability similarity (+0.45), acousticness similarity (+0.46)
+
+Gym Hero - Score: 5.79
+Because: genre match (+2.0), energy similarity (+1.47), valence similarity (+0.87), tempo similarity (+0.48), danceability similarity (+0.49), acousticness similarity (+0.47)
+
+Rooftop Lights - Score: 4.40
+Because: mood match (+1.0), energy similarity (+1.22), valence similarity (+0.91), tempo similarity (+0.45), danceability similarity (+0.46), acousticness similarity (+0.38)
+
+Funky Weekend - Score: 3.73
+Because: energy similarity (+1.40), valence similarity (+0.96), tempo similarity (+0.41), danceability similarity (+0.48), acousticness similarity (+0.49)
+
+City Bounce - Score: 3.54
+Because: energy similarity (+1.36), valence similarity (+0.84), tempo similarity (+0.34), danceability similarity (+0.49), acousticness similarity (+0.49)
+```
+
+### 2. Chill Lofi
+
+```=======================================================
+USER PROFILE: Chill Lofi
+=======================================================
+
+Top 5 recommendations:
+
+Library Rain - Score: 6.97
+Because: genre match (+2.0), mood match (+1.0), energy similarity (+1.50), valence similarity (+1.00), tempo similarity (+0.48), danceability similarity (+0.49), acousticness similarity (+0.49)
+
+Midnight Coding - Score: 6.73
+Because: genre match (+2.0), mood match (+1.0), energy similarity (+1.40), valence similarity (+0.96), tempo similarity (+0.48), danceability similarity (+0.47), acousticness similarity (+0.43)
+
+Focus Flow - Score: 5.83
+Because: genre match (+2.0), energy similarity (+1.42), valence similarity (+0.99), tempo similarity (+0.47), danceability similarity (+0.48), acousticness similarity (+0.47)
+
+Spacewalk Thoughts - Score: 4.66
+Because: mood match (+1.0), energy similarity (+1.40), valence similarity (+0.95), tempo similarity (+0.42), danceability similarity (+0.43), acousticness similarity (+0.46)
+
+Coffee Shop Stories - Score: 3.76
+Because: energy similarity (+1.47), valence similarity (+0.89), tempo similarity (+0.42), danceability similarity (+0.49), acousticness similarity (+0.48)
+```
+
+### 3. Deep Intense Rock
+
+```=======================================================
+USER PROFILE: Deep Intense Rock
+=======================================================
+
+Top 5 recommendations:
+
+Storm Runner - Score: 6.87
+Because: genre match (+2.0), mood match (+1.0), energy similarity (+1.44), valence similarity (+0.97), tempo similarity (+0.48), danceability similarity (+0.47), acousticness similarity (+0.50)
+
+Gym Hero - Score: 4.37
+Because: mood match (+1.0), energy similarity (+1.47), valence similarity (+0.68), tempo similarity (+0.39), danceability similarity (+0.36), acousticness similarity (+0.47)
+
+Iron Pulse - Score: 3.76
+Because: energy similarity (+1.47), valence similarity (+0.93), tempo similarity (+0.43), danceability similarity (+0.46), acousticness similarity (+0.46)
+
+Night Drive Loop - Score: 3.31
+Because: energy similarity (+1.20), valence similarity (+0.96), tempo similarity (+0.28), danceability similarity (+0.43), acousticness similarity (+0.44)
+
+City Bounce - Score: 3.16
+Because: energy similarity (+1.36), valence similarity (+0.71), tempo similarity (+0.24), danceability similarity (+0.34), acousticness similarity (+0.49)
+```
+
+### 4. Conflicting Preferences (Adversarial Test)
+
+```=======================================================
+USER PROFILE: Conflicting Preferences
+=======================================================
+
+Top 5 recommendations:
+
+Storm Runner - Score: 5.52
+Because: genre match (+2.0), energy similarity (+1.44), valence similarity (+0.72), tempo similarity (+0.46), danceability similarity (+0.43), acousticness similarity (+0.47)
+
+Iron Pulse - Score: 3.60
+Because: energy similarity (+1.47), valence similarity (+0.82), tempo similarity (+0.46), danceability similarity (+0.36), acousticness similarity (+0.49)
+
+Gym Hero - Score: 3.22
+Because: energy similarity (+1.47), valence similarity (+0.43), tempo similarity (+0.36), danceability similarity (+0.46), acousticness similarity (+0.50)
+
+Night Drive Loop - Score: 3.04
+Because: energy similarity (+1.20), valence similarity (+0.71), tempo similarity (+0.25), danceability similarity (+0.46), acousticness similarity (+0.42)
+
+City Bounce - Score: 2.97
+Because: energy similarity (+1.36), valence similarity (+0.46), tempo similarity (+0.22), danceability similarity (+0.45), acousticness similarity (+0.48)
+```
+
+### Evaluation Observations
+
+- The system successfully ranked songs according to different user preferences.
+- Exact genre and mood matches contributed additional points to recommendation scores.
+- Numerical similarities allowed songs without exact genre or mood matches to rank highly.
+- The conflicting preference test demonstrated that the algorithm combines all preferences into one weighted score rather than detecting contradictions.
+
+Also, for the High-Energy Pop profile, the recommendations generally matched what I expected. Sunrise City ranked first with a score of 6.56 because it matched both the preferred genre (pop) and mood (happy), while also receiving strong numerical similarity scores.
+
+One surprising result was Gym Hero ranking second with a score of 5.79 even though it did not match the requested mood.
+
 ---
 
 ## Reflection
