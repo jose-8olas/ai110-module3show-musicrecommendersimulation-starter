@@ -1,12 +1,13 @@
+
 from typing import List, Dict, Tuple, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import csv
+
 
 @dataclass
 class Song:
     """
     Represents a song and its attributes.
-    Required by tests/test_recommender.py
     """
     id: int
     title: str
@@ -19,22 +20,37 @@ class Song:
     danceability: float
     acousticness: float
 
+    # Advanced song features
+    popularity: float = 50.0
+    release_decade: int = 2020
+    mood_tags: List[str] = field(default_factory=list)
+    language: str = "English"
+    explicit: bool = False
+
+
 @dataclass
 class UserProfile:
     """
     Represents a user's taste preferences.
-    Required by tests/test_recommender.py
     """
     favorite_genre: str
     favorite_mood: str
     target_energy: float
     likes_acoustic: bool
 
+    # Advanced preferences
+    target_popularity: Optional[float] = None
+    preferred_decade: Optional[int] = None
+    preferred_mood_tags: List[str] = field(default_factory=list)
+    preferred_language: Optional[str] = None
+    prefer_explicit: Optional[bool] = None
+
+
 class Recommender:
     """
     OOP implementation of the recommendation logic.
-    Required by tests/test_recommender.py
     """
+
     def __init__(self, songs: List[Song]):
         self.songs = songs
 
@@ -50,8 +66,8 @@ class Recommender:
 def load_songs(csv_path: str) -> List[Dict]:
     """
     Loads songs from a CSV file.
-    Required by src/main.py
     """
+
     songs = []
 
     numeric_columns = [
@@ -59,7 +75,8 @@ def load_songs(csv_path: str) -> List[Dict]:
         "tempo_bpm",
         "valence",
         "danceability",
-        "acousticness"
+        "acousticness",
+        "popularity"
     ]
 
     with open(csv_path, "r", newline="", encoding="utf-8") as file:
@@ -71,6 +88,20 @@ def load_songs(csv_path: str) -> List[Dict]:
             for column in numeric_columns:
                 row[column] = float(row[column])
 
+            row["release_decade"] = int(row["release_decade"])
+
+            # Convert mood tags into a list
+            row["mood_tags"] = [
+                tag.strip().lower()
+                for tag in row["mood_tags"].split("|")
+                if tag.strip()
+            ]
+
+            # Convert explicit into Boolean
+            row["explicit"] = (
+                row["explicit"].strip().lower() == "true"
+            )
+
             songs.append(row)
 
     print(f"Loaded songs: {len(songs)}")
@@ -78,101 +109,338 @@ def load_songs(csv_path: str) -> List[Dict]:
     return songs
 
 
+# =======================================
+# CHALLENGE 2: SCORING STRATEGIES
+# =======================================
 
-def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
-    """Calculate a weighted score and reasons for a song."""
+SCORING_STRATEGIES = {
+
+    "Genre-First": {
+        "genre": 4.0,
+        "mood": 1.0,
+        "energy": 1.0,
+        "valence": 0.5,
+        "tempo": 0.25,
+        "danceability": 0.25,
+        "acousticness": 0.25
+    },
+
+    "Mood-First": {
+        "genre": 1.0,
+        "mood": 3.0,
+        "energy": 1.0,
+        "valence": 1.0,
+        "tempo": 0.25,
+        "danceability": 0.25,
+        "acousticness": 0.25
+    },
+
+    "Energy-Focused": {
+        "genre": 1.0,
+        "mood": 0.5,
+        "energy": 3.0,
+        "valence": 0.5,
+        "tempo": 1.0,
+        "danceability": 1.0,
+        "acousticness": 0.25
+    }
+}
+
+
+def score_song(
+    user_prefs: Dict,
+    song: Dict,
+    strategy: str = "Genre-First"
+) -> Tuple[float, List[str]]:
+    """
+    Calculates a song score using the selected scoring strategy.
+    """
+
+    if strategy not in SCORING_STRATEGIES:
+        raise ValueError(
+            f"Unknown scoring strategy: {strategy}. "
+            f"Available strategies: {list(SCORING_STRATEGIES.keys())}"
+        )
+
+    weights = SCORING_STRATEGIES[strategy]
 
     score = 0.0
     reasons = []
 
-    # Genre match: +2.0 points
+    # ---------------------------------------
+    # GENRE MATCH
+    # ---------------------------------------
+
     if song["genre"].lower() == user_prefs["favorite_genre"].lower():
-        score += 2.0
-        reasons.append("genre match (+2.0)")
-    # Genre match: +1.0 point
-    # if song["genre"].lower() == user_prefs["favorite_genre"].lower():
-    #     score += 1.0
-    #     reasons.append("genre match (+1.0)")
+        points = weights["genre"]
+        score += points
+        reasons.append(f"genre match (+{points:.2f})")
 
+    # ---------------------------------------
+    # MOOD MATCH
+    # ---------------------------------------
 
-
-    # Mood match: +1.0 point
     if song["mood"].lower() == user_prefs["favorite_mood"].lower():
-        score += 1.0
-        reasons.append("mood match (+1.0)")
+        points = weights["mood"]
+        score += points
+        reasons.append(f"mood match (+{points:.2f})")
 
-    # Energy similarity: up to 1.5 points
-    energy_similarity = 1 - abs(
-        song["energy"] - user_prefs["target_energy"]
+    # ---------------------------------------
+    # ENERGY SIMILARITY
+    # ---------------------------------------
+
+    energy_similarity = max(
+        0,
+        1 - abs(song["energy"] - user_prefs["target_energy"])
     )
-    energy_points = 1.5 * energy_similarity
-    # Energy similarity: up to 3.0 points
-    # energy_similarity = 1 - abs(
-    #     song["energy"] - user_prefs["target_energy"]
-    # )
-    # energy_points = 3.0 * energy_similarity
-    score += energy_points
-    reasons.append(f"energy similarity (+{energy_points:.2f})")
 
-    # Valence similarity: up to 1.0 point
-    valence_similarity = 1 - abs(
-        song["valence"] - user_prefs["target_valence"]
+    points = weights["energy"] * energy_similarity
+    score += points
+    reasons.append(f"energy similarity (+{points:.2f})")
+
+    # ---------------------------------------
+    # VALENCE SIMILARITY
+    # ---------------------------------------
+
+    valence_similarity = max(
+        0,
+        1 - abs(song["valence"] - user_prefs["target_valence"])
     )
-    valence_points = 1.0 * valence_similarity
-    score += valence_points
-    reasons.append(f"valence similarity (+{valence_points:.2f})")
 
-    # Tempo similarity: up to 0.5 points
+    points = weights["valence"] * valence_similarity
+    score += points
+    reasons.append(f"valence similarity (+{points:.2f})")
+
+    # ---------------------------------------
+    # TEMPO SIMILARITY
+    # ---------------------------------------
+
     tempo_similarity = max(
         0,
         1 - abs(song["tempo_bpm"] - user_prefs["target_tempo"]) / 100
     )
-    tempo_points = 0.5 * tempo_similarity
-    score += tempo_points
-    reasons.append(f"tempo similarity (+{tempo_points:.2f})")
 
-    # Danceability similarity: up to 0.5 points
-    danceability_similarity = 1 - abs(
-        song["danceability"] - user_prefs["target_danceability"]
-    )
-    danceability_points = 0.5 * danceability_similarity
-    score += danceability_points
-    reasons.append(f"danceability similarity (+{danceability_points:.2f})")
+    points = weights["tempo"] * tempo_similarity
+    score += points
+    reasons.append(f"tempo similarity (+{points:.2f})")
 
-    # Acousticness similarity: up to 0.5 points
-    acousticness_similarity = 1 - abs(
-        song["acousticness"] - user_prefs["target_acousticness"]
+    # ---------------------------------------
+    # DANCEABILITY SIMILARITY
+    # ---------------------------------------
+
+    danceability_similarity = max(
+        0,
+        1 - abs(
+            song["danceability"] - user_prefs["target_danceability"]
+        )
     )
-    acousticness_points = 0.5 * acousticness_similarity
-    score += acousticness_points
-    reasons.append(f"acousticness similarity (+{acousticness_points:.2f})")
+
+    points = weights["danceability"] * danceability_similarity
+    score += points
+    reasons.append(f"danceability similarity (+{points:.2f})")
+
+    # ---------------------------------------
+    # ACOUSTICNESS SIMILARITY
+    # ---------------------------------------
+
+    acousticness_similarity = max(
+        0,
+        1 - abs(
+            song["acousticness"] - user_prefs["target_acousticness"]
+        )
+    )
+
+    points = weights["acousticness"] * acousticness_similarity
+    score += points
+    reasons.append(f"acousticness similarity (+{points:.2f})")
+
+    # =======================================
+    # CHALLENGE 1: ADVANCED SONG FEATURES
+    # =======================================
+
+    # Popularity similarity
+    if user_prefs.get("target_popularity") is not None:
+
+        popularity_similarity = max(
+            0,
+            1 - abs(
+                song["popularity"] - user_prefs["target_popularity"]
+            ) / 100
+        )
+
+        points = 0.5 * popularity_similarity
+        score += points
+
+        reasons.append(
+            f"popularity similarity (+{points:.2f})"
+        )
+
+    # Release decade match
+    if user_prefs.get("preferred_decade") is not None:
+
+        if song["release_decade"] == user_prefs["preferred_decade"]:
+            score += 0.5
+            reasons.append("release decade match (+0.50)")
+
+    # Detailed mood tags
+    preferred_tags = user_prefs.get("preferred_mood_tags", [])
+
+    if preferred_tags:
+
+        song_tags = song["mood_tags"]
+
+        matching_tags = [
+            tag for tag in preferred_tags
+            if tag.lower() in song_tags
+        ]
+
+        tag_similarity = len(matching_tags) / len(preferred_tags)
+
+        points = 0.5 * tag_similarity
+        score += points
+
+        if matching_tags:
+            reasons.append(
+                f"mood tags match (+{points:.2f})"
+            )
+
+    # Language match
+    preferred_language = user_prefs.get("preferred_language")
+
+    if preferred_language is not None:
+
+        if song["language"].lower() == preferred_language.lower():
+            score += 0.5
+            reasons.append("language match (+0.50)")
+
+    # Explicit content preference
+    prefer_explicit = user_prefs.get("prefer_explicit")
+
+    if prefer_explicit is not None:
+
+        if song["explicit"] == prefer_explicit:
+            score += 0.5
+            reasons.append("explicit preference match (+0.50)")
 
     return score, reasons
 
 
+# =======================================
+# CHALLENGE 3: DIVERSITY PENALTY
+# =======================================
 
-def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
+def recommend_songs(
+    user_prefs: Dict,
+    songs: List[Dict],
+    k: int = 5,
+    strategy: str = "Genre-First"
+) -> List[Tuple[Dict, float, str]]:
     """
-    Scores all songs and returns the top k recommendations.
+    Scores songs using the selected strategy and applies
+    diversity penalties to repeated artists and genres.
     """
 
     scored_songs = []
 
-    # Score every song
+    # Calculate original scores for all songs
     for song in songs:
-        score, reasons = score_song(user_prefs, song)
 
-        # Combine the scoring reasons into one explanation
+        score, reasons = score_song(
+            user_prefs,
+            song,
+            strategy
+        )
+
         explanation = ", ".join(reasons)
 
-        scored_songs.append((song, score, explanation))
+        scored_songs.append(
+            (song, score, explanation)
+        )
 
-    # Sort songs from highest score to lowest score
-    ranked_songs = sorted(
-        scored_songs,
-        key=lambda recommendation: recommendation[1],
-        reverse=True
-    )
+    recommendations = []
 
-    # Return only the top k songs
-    return ranked_songs[:k]
+    # Track previously selected artists and genres
+    selected_artists = {}
+    selected_genres = {}
+
+    # Diversity penalty values
+    artist_penalty = 2.0
+    genre_penalty = 0.75
+
+    # Select songs one at a time
+    while scored_songs and len(recommendations) < k:
+
+        best_index = -1
+        best_adjusted_score = float("-inf")
+        best_explanation = ""
+
+        # Evaluate remaining songs
+        for i, (song, original_score, explanation) in enumerate(scored_songs):
+
+            adjusted_score = original_score
+            diversity_reasons = []
+
+            artist = song["artist"].strip().lower()
+            genre = song["genre"].strip().lower()
+
+            # Artist diversity penalty
+            artist_count = selected_artists.get(artist, 0)
+
+            if artist_count > 0:
+
+                penalty = artist_penalty * artist_count
+                adjusted_score -= penalty
+
+                diversity_reasons.append(
+                    f"repeated artist (-{penalty:.2f})"
+                )
+
+            # Genre diversity penalty
+            genre_count = selected_genres.get(genre, 0)
+
+            if genre_count > 0:
+
+                penalty = genre_penalty * genre_count
+                adjusted_score -= penalty
+
+                diversity_reasons.append(
+                    f"repeated genre (-{penalty:.2f})"
+                )
+
+            # Find the highest adjusted score
+            if adjusted_score > best_adjusted_score:
+
+                best_adjusted_score = adjusted_score
+                best_index = i
+                best_explanation = explanation
+
+                if diversity_reasons:
+
+                    best_explanation += ", " + ", ".join(
+                        diversity_reasons
+                    )
+
+        # Select the best song
+        best_song = scored_songs.pop(best_index)[0]
+
+        recommendations.append(
+            (
+                best_song,
+                best_adjusted_score,
+                best_explanation
+            )
+        )
+
+        # Update artist and genre counts
+        artist = best_song["artist"].strip().lower()
+        genre = best_song["genre"].strip().lower()
+
+        selected_artists[artist] = (
+            selected_artists.get(artist, 0) + 1
+        )
+
+        selected_genres[genre] = (
+            selected_genres.get(genre, 0) + 1
+        )
+
+    return recommendations
